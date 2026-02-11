@@ -1,0 +1,186 @@
+manifest:
+  version: "0.1.3"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: truptimohanty/mage
+    source: https://github.com/truptimohanty/mage
+    branch: main
+    commit: "157430c2"
+    scope: [multi_tool_agent/agent.py]
+  issued:
+    by: A2AS.org
+    at: '2026-02-11T16:53:59Z'
+    url: https://a2as.org/certified/agents/truptimohanty/mage
+  signatures:
+    digest: sha256:ezU9YMRN7q3Re20A_REVaA-G26FtX5lZAhpneLRgTzU
+    key: ed25519:wxl9jMrCJq7O72tSGPAIEFoB2lbpgyLEu38KqRCM3t8
+    sig: ed25519:OCxPf1Ad49rVpvRs2TiEWasFfbPZl86POj2K-alZvcAI1Q0Wpf_MgVosJ7Gyp2ju4BJft3B27C1nI9GyPZAXDA
+
+agents:
+  root_agent:
+    type: instance
+    models: [gemini-2.0-flash]
+    tools: [predict_Bulk_Modulus_from_model_given_structure, generate_Structure_from_model_given_Bulk_Modulus, predict_Bulk_Modulus_from_model_given_composition,
+      predict_formation_energy_from_cif_file]
+    params:
+      name: Bulk_Modulus_and_CIF_Generator_Agent
+      description: Agent to predict material properties like bulk modulus, generate CIF structures, and predict formation
+        energies.
+      instruction: ['You are a helpful agent who can:', 1) Predict bulk modulus from composition/structure, 2) Generate CIF
+          structures from bulk modulus values, 3) Predict formation energies from CIF files., 'When calling functions, ALWAYS
+          show the complete function output including file names, predicted values, do not show the contents of the CIF file.
+          Do not modify or summarize the function results.']
+
+models:
+  gemini-2.0-flash:
+    type: literal
+    agents: [root_agent]
+
+tools:
+  generate_Structure_from_model_given_Bulk_Modulus:
+    type: function
+    agents: [root_agent]
+    params:
+      description: "Generate Structure (CIF) from given Bulk Modulus value in GPa using a fine-tuned LLM model.\n    Args:\n\
+        \        bulk_modulus (float): Predicted Bulk Modulus value in GPa.\n    Returns:\n        str: (cif_text, outfile_path):\
+        \ Generated CIF text and saved file path.\n    "
+  predict_Bulk_Modulus_from_model_given_composition:
+    type: function
+    agents: [root_agent]
+    params:
+      description: |-
+        Predict Bulk Modulus using a fine-tuned LLM model.
+        Args:
+            composition (str): Material composition, e.g. "Al2O3".
+        Returns:
+            float: Prdicted Bulk modulus in GPa.
+  predict_Bulk_Modulus_from_model_given_structure:
+    type: function
+    agents: [root_agent]
+    params:
+      description: "Predict Bulk Modulus using a fine-tuned LLM model.\n    Args:\n        cif file path (str): Material structure\
+        \ file path, e.g. \"Al2O3.cif\".\n    Returns:\n        float: Prdicted Bulk modulus in GPa.\n    "
+  predict_formation_energy_from_cif_file:
+    type: function
+    agents: [root_agent]
+    params:
+      description: "Predict formation energy using M3GNet model via API call.\n\nArgs:\n    cif_file_path (str): Path to the\
+        \ CIF file.\n    \nReturns:\n    dict: status and result or error msg."
+
+imports:
+  Agent: google.adk.agents.Agent
+  agent: agent
+  argparse: argparse
+  asyncio: asyncio
+  base64: base64
+  call_agent_async: agent.call_agent_async
+  components: streamlit.components.v1
+  Composition: pymatgen.core.Composition
+  datetime: datetime
+  FastLanguageModel: unsloth.FastLanguageModel
+  go: plotly.graph_objects
+  InMemorySessionService: google.adk.sessions.InMemorySessionService
+  io: io
+  json: json
+  Lattice: pymatgen.core.Lattice
+  load_dotenv: dotenv.load_dotenv
+  np: numpy
+  os: os
+  pdist: scipy.spatial.distance.pdist
+  random: random
+  re: re
+  redirect_stderr: contextlib.redirect_stderr
+  redirect_stdout: contextlib.redirect_stdout
+  requests: requests
+  Runner: google.adk.runners.Runner
+  shutil: shutil
+  squareform: scipy.spatial.distance.squareform
+  st: streamlit
+  Structure: pymatgen.core.Structure
+  sys: sys
+  TextStreamer: transformers.TextStreamer
+  threading: threading
+  time: time
+  torch: torch
+  types: google.genai.types
+  ZoneInfo: zoneinfo.ZoneInfo
+
+functions:
+  auto_refresh:
+    type: sync
+    module: multi_tool_agent.streamlit_app
+  auto_refresh_processing:
+    type: sync
+    module: multi_tool_agent.streamlit_app
+  call_agent_async:
+    type: async
+    module: multi_tool_agent.agent
+    args: [query]
+  generate_Structure_from_model_given_Bulk_Modulus:
+    type: sync
+    module: multi_tool_agent.agent
+    args: [bulk_modulus]
+  predict_Bulk_Modulus_from_model_given_composition:
+    type: sync
+    module: multi_tool_agent.agent
+    args: [composition]
+  predict_Bulk_Modulus_from_model_given_structure:
+    type: sync
+    module: multi_tool_agent.agent
+    args: [cif_file_path]
+  predict_formation_energy_from_cif_file:
+    type: sync
+    module: multi_tool_agent.agent
+    args: [cif_file_path]
+    params:
+      returns: dict
+  setup_session_and_runner:
+    type: async
+    module: multi_tool_agent.agent
+  visualize_cif_structure:
+    type: sync
+    module: multi_tool_agent.streamlit_app
+    args: [cif_file_path]
+  visualize_cif_structure_crystal_toolkit:
+    type: sync
+    module: multi_tool_agent.streamlit_app
+    args: [cif_file_path]
+  visualize_cif_structure_enhanced:
+    type: sync
+    module: multi_tool_agent.streamlit_app
+    args: [cif_file_path]
+
+files:
+  MAGE.png:
+    type: literal
+    actions: [read]
+    params:
+      caller: [open]
+      alias: [f]
+  matpropai.png:
+    type: literal
+    actions: [read]
+    params:
+      caller: [open]
+      alias: [f]
+  st.session_state.auto_viz_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open]
+      alias: [f]
+  st.session_state.generated_cif_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [os.path.exists, open]
+
+networks:
+  localhost:
+    type: api
+    actions: [POST]
+    urls: [/predict_formation_energy]
+    protocols: [http]
+    ports: ["5001"]
+    params:
+      caller: [predict_formation_energy_from_cif_file]
